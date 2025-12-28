@@ -1,30 +1,613 @@
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>uzzi.ca</title>
-	</head>
-	<body>
-		<strong>&mdash;I don't work here.&mdash;</strong>
-		<br>
-		<br>
-		<br>
-		<br>
-		<br>
-		<br>
-		<br>
-		<br>
-		But I might work for you!
-		<a href="mailto:admin@uzzi.ca?Subject=Serious Inquiry" target="_top">admin@uzzi.ca</a>
-			<div class="latex4000Webring">
-				<a href="https://nonacademic.net" title="Collective">Latex 4000</a>
-				<div class="latex4000WebringButtons">
-					<a href="https://nonacademic.net/ring?action=prev&amp;from=uzzi" title="Previous">←</a>
-					<a href="https://nonacademic.net/ring?action=rand&amp;from=uzzi" title="Random">Random</a>
-					<a href="https://nonacademic.net/ring?action=next&amp;from=uzzi" title="Next">→</a>
-				</div>
-			</div>
-	</body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>uzzi.ca</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'MS Sans Serif', Arial, sans-serif;
+      background: #008080;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .desktop {
+      height: calc(100vh - 36px);
+      position: relative;
+      padding: 13px;
+    }
+
+    .icon {
+      width: 91px;
+      text-align: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .icon img {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 3px;
+    }
+
+    .icon-label {
+      color: white;
+      font-size: 14px;
+      text-shadow: 1px 1px 2px black;
+      padding: 3px 5px;
+    }
+
+    .icon.selected .icon-label {
+      background: #000080;
+      color: white;
+    }
+
+    .window {
+      position: absolute;
+      background: #c0c0c0;
+      border: 3px solid;
+      border-color: #dfdfdf #808080 #808080 #dfdfdf;
+      min-width: 390px;
+      min-height: 260px;
+      display: none;
+    }
+
+    .window.active {
+      z-index: 1000;
+    }
+
+    .title-bar {
+      background: linear-gradient(to right, #000080, #1084d0);
+      color: white;
+      padding: 3px 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      user-select: none;
+    }
+
+    .window:not(.active) .title-bar {
+      background: #808080;
+    }
+
+    .title-bar-text {
+      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .title-bar-controls button {
+      width: 21px;
+      height: 18px;
+      padding: 0;
+      margin-left: 3px;
+      background: #c0c0c0;
+      border: 1px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .title-bar-controls button:active {
+      border-color: #000000 #ffffff #ffffff #000000;
+    }
+
+    .window-body {
+      padding: 13px;
+      background: white;
+      margin: 3px;
+      height: calc(100% - 29px);
+      overflow: auto;
+    }
+
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: #c0c0c0;
+      border-top: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .start-button {
+      height: 29px;
+      padding: 0 10px;
+      background: #c0c0c0;
+      border: 3px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .start-button:active, .start-button.active {
+      border-color: #000000 #ffffff #ffffff #000000;
+    }
+
+    .start-button img {
+      width: 21px;
+      height: 21px;
+    }
+
+    .taskbar-divider {
+      width: 3px;
+      height: 29px;
+      background: #808080;
+      margin: 0 3px;
+      border-right: 1px solid #ffffff;
+    }
+
+    .taskbar-items {
+      display: flex;
+      gap: 3px;
+      flex: 1;
+    }
+
+    .taskbar-item {
+      height: 29px;
+      padding: 0 10px;
+      background: #c0c0c0;
+      border: 3px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+      max-width: 195px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+
+    .taskbar-item.active {
+      border-color: #000000 #ffffff #ffffff #000000;
+      background: #c0c0c0;
+    }
+
+    .start-menu {
+      position: fixed;
+      bottom: 36px;
+      left: 3px;
+      width: 260px;
+      background: #c0c0c0;
+      border: 3px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      display: none;
+    }
+
+    .start-menu.open {
+      display: block;
+    }
+
+    .start-menu-item {
+      padding: 5px 39px 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .start-menu-item:hover {
+      background: #000080;
+      color: white;
+    }
+
+    .start-menu-item img {
+      width: 21px;
+      height: 21px;
+    }
+
+    .start-menu-item.has-submenu {
+      position: relative;
+    }
+
+    .start-menu-item.has-submenu::after {
+      content: '▶';
+      position: absolute;
+      right: 10px;
+      font-size: 10px;
+    }
+
+    .submenu {
+      position: fixed;
+      background: #c0c0c0;
+      border: 3px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      display: none;
+      min-width: 234px;
+    }
+
+    .submenu.open {
+      display: block;
+    }
+
+    .submenu-item {
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .submenu-item:hover {
+      background: #000080;
+      color: white;
+    }
+
+    .system-tray {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 0 3px;
+      height: 29px;
+      background: #c0c0c0;
+      border-left: 3px solid #808080;
+      border-right: 1px solid #ffffff;
+    }
+
+    .webring {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 0 5px;
+    }
+
+    .webring-button {
+      width: 26px;
+      height: 23px;
+      padding: 0;
+      background: #c0c0c0;
+      border: 1px solid;
+      border-color: #ffffff #000000 #000000 #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .webring-button:hover {
+      background: #d4d0c8;
+    }
+
+    .webring-button:active {
+      border-color: #000000 #ffffff #ffffff #000000;
+      background: #c0c0c0;
+    }
+
+    .webring-button.back::before {
+      content: '◀';
+    }
+
+    .webring-button.forward::before {
+      content: '▶';
+    }
+
+    .webring-button.random::before {
+      content: '?';
+    }
+
+    .webring-link {
+      color: #000000;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 3px 8px;
+      display: inline-block;
+      height: 23px;
+      line-height: 18px;
+    }
+
+    .webring-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop" id="desktop"></div>
+
+  <div class="taskbar">
+    <button class="start-button" id="startBtn">
+      <span style="font-size: 21px;">⊞</span>
+      Start
+    </button>
+    <div class="taskbar-divider"></div>
+    <div class="taskbar-items" id="taskbarItems"></div>
+    <div class="system-tray">
+      <div class="webring">
+        <button class="webring-button back" id="webringBack" title="Previous"></button>
+        <button class="webring-button forward" id="webringForward" title="Next"></button>
+        <button class="webring-button random" id="webringRandom" title="Random"></button>
+        <a href="https://nonacademic.net" class="webring-link" id="webringOrigin">LaTeX 4000</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="start-menu" id="startMenu">
+    <div class="start-menu-item" data-window="about">
+      <span>ℹ️</span>
+      About Me
+    </div>
+    <div class="start-menu-item" data-window="blog">
+      <span>📝</span>
+      Blog
+    </div>
+    <div class="start-menu-item has-submenu" data-has-submenu="projects">
+      <span>💼</span>
+      Projects
+    </div>
+    <div class="start-menu-item" data-window="contact">
+      <span>📧</span>
+      Contact
+    </div>
+  </div>
+
+  <div class="submenu" id="projectsSubmenu">
+    <div class="submenu-item" data-window="project1">
+      <span>🎮</span>
+      Board
+    </div>
+  </div>
+
+  <script>
+    const windows = {};
+    let zIndex = 1;
+    let activeWindow = null;
+
+    const windowContents = {
+      about: {
+        title: 'About Me',
+        content: `<h3>Welcome!</h3>
+          <p>Hi, name's Uzzi.</p>
+          <p>Software developer.</p>
+          <p>You can drag windows, minimize them, and open multiple windows at once.</p>`
+      },
+      blog: {
+        title: 'Blog',
+        content: `<h3>COMING SOON</h3>`
+      },
+      projects: {
+        title: 'Projects',
+        content: `<h3>My Projects</h3>
+          <ul>
+            <li>Retro Website Builder</li>
+          </ul>`
+      },
+      contact: {
+        title: 'Contact',
+        content: `<h3>Get in Touch</h3>
+          <p><strong>Email:</strong> <a href="mailto:admin@uzzi.com" target="_blank">admin@uzzi.com</a></p>
+          <p><strong>GitHub:</strong> <a href="https://github.com/UzziD" target="_blank">github.com/UzziD</a></p>`
+      },
+      project1: {
+        title: 'Board',
+        content: `<h3>Board</h3>
+          <p>Incremental video game. Coming soon(tm).</p>`
+      }
+    };
+
+    function createWindow(id, title, content) {
+      if (windows[id]) {
+        focusWindow(id);
+        return;
+      }
+
+      const win = document.createElement('div');
+      win.className = 'window active';
+      win.id = `window-${id}`;
+      win.style.left = `${65 + Object.keys(windows).length * 39}px`;
+      win.style.top = `${65 + Object.keys(windows).length * 39}px`;
+      win.style.width = '520px';
+      win.style.height = '390px';
+      win.style.display = 'block';
+
+      win.innerHTML = `
+        <div class="title-bar">
+          <div class="title-bar-text">
+            <span>${title}</span>
+          </div>
+          <div class="title-bar-controls">
+            <button onclick="minimizeWindow('${id}')">_</button>
+            <button onclick="closeWindow('${id}')">×</button>
+          </div>
+        </div>
+        <div class="window-body">${content}</div>
+      `;
+
+      document.getElementById('desktop').appendChild(win);
+      windows[id] = { element: win, title, minimized: false };
+      
+      createTaskbarItem(id, title);
+      makeDraggable(win, id);
+      focusWindow(id);
+    }
+
+    function createTaskbarItem(id, title) {
+      const item = document.createElement('div');
+      item.className = 'taskbar-item active';
+      item.id = `taskbar-${id}`;
+      item.textContent = title;
+      item.onclick = () => toggleWindow(id);
+      document.getElementById('taskbarItems').appendChild(item);
+    }
+
+    function toggleWindow(id) {
+      const win = windows[id];
+      if (!win) return;
+
+      if (win.minimized) {
+        win.element.style.display = 'block';
+        win.minimized = false;
+        focusWindow(id);
+      } else if (activeWindow === id) {
+        minimizeWindow(id);
+      } else {
+        focusWindow(id);
+      }
+    }
+
+    function minimizeWindow(id) {
+      const win = windows[id];
+      if (!win) return;
+      win.element.style.display = 'none';
+      win.minimized = true;
+      win.element.classList.remove('active');
+      document.getElementById(`taskbar-${id}`).classList.remove('active');
+      activeWindow = null;
+    }
+
+    function closeWindow(id) {
+      const win = windows[id];
+      if (!win) return;
+      win.element.remove();
+      document.getElementById(`taskbar-${id}`).remove();
+      delete windows[id];
+      activeWindow = null;
+    }
+
+    function focusWindow(id) {
+      Object.keys(windows).forEach(wId => {
+        windows[wId].element.classList.remove('active');
+        document.getElementById(`taskbar-${wId}`).classList.remove('active');
+      });
+      
+      windows[id].element.classList.add('active');
+      windows[id].element.style.zIndex = ++zIndex;
+      document.getElementById(`taskbar-${id}`).classList.add('active');
+      activeWindow = id;
+    }
+
+    function makeDraggable(win, id) {
+      const titleBar = win.querySelector('.title-bar');
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      titleBar.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        focusWindow(id);
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        win.style.left = `${e.clientX - offsetX}px`;
+        win.style.top = `${e.clientY - offsetY}px`;
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      win.addEventListener('mousedown', () => focusWindow(id));
+    }
+
+    document.getElementById('startBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('startMenu');
+      const btn = document.getElementById('startBtn');
+      menu.classList.toggle('open');
+      btn.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('startMenu');
+      const btn = document.getElementById('startBtn');
+      const submenu = document.getElementById('projectsSubmenu');
+      if (!menu.contains(e.target) && e.target !== btn && !submenu.contains(e.target)) {
+        menu.classList.remove('open');
+        btn.classList.remove('active');
+        submenu.classList.remove('open');
+      }
+    });
+
+    document.querySelectorAll('.start-menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        // Check if this item has a submenu
+        if (item.dataset.hasSubmenu) {
+          e.stopPropagation();
+          const submenuId = item.dataset.hasSubmenu + 'Submenu';
+          const submenu = document.getElementById(submenuId);
+          if (submenu) {
+            // Position submenu to the right of the Projects item
+            const rect = item.getBoundingClientRect();
+            submenu.style.left = `${rect.right}px`;
+            submenu.style.top = `${rect.top}px`;
+            submenu.classList.toggle('open');
+          }
+        } else {
+          // Regular menu item that opens a window
+          const windowId = item.dataset.window;
+          if (windowId) {
+            const windowData = windowContents[windowId];
+            createWindow(windowId, windowData.title, windowData.content);
+            document.getElementById('startMenu').classList.remove('open');
+            document.getElementById('startBtn').classList.remove('active');
+            document.getElementById('projectsSubmenu').classList.remove('open');
+          }
+        }
+      });
+    });
+
+    // Handle submenu item clicks
+    document.querySelectorAll('.submenu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const windowId = item.dataset.window;
+        if (windowId) {
+          const windowData = windowContents[windowId];
+          createWindow(windowId, windowData.title, windowData.content);
+          document.getElementById('startMenu').classList.remove('open');
+          document.getElementById('startBtn').classList.remove('active');
+          document.getElementById('projectsSubmenu').classList.remove('open');
+        }
+      });
+    });
+
+    const webringUrls = {
+      back: 'https://nonacademic.net/ring?action=prev&from=uzzi',
+      forward: 'https://nonacademic.net/ring?action=next&from=uzzi',
+      random: 'https://nonacademic.net/ring?action=rand&from=uzzi',
+      origin: 'https://nonacademic.net'
+    };
+
+    function navigateToSite(url) {
+      window.location.href = url;
+    }
+
+    document.getElementById('webringBack').addEventListener('click', () => {
+      navigateToSite(webringUrls.back);
+    });
+
+    document.getElementById('webringForward').addEventListener('click', () => {
+      navigateToSite(webringUrls.forward);
+    });
+
+    document.getElementById('webringRandom').addEventListener('click', () => {
+      navigateToSite(webringUrls.random);
+    });
+  </script>
+</body>
 </html>
